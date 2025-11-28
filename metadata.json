@@ -1,0 +1,5 @@
+{
+  "name": "OpenCRM",
+  "description": "A simple, powerful, open-source CRM for small teams. Features lead management, deal pipelines, document vaults, and AI-powered insights.",
+  "requestFramePermissions": []
+}
