@@ -1,9 +1,10 @@
 
+
 import React, { useState } from 'react';
 import { Plus, MoreHorizontal, Sparkles, X, Save } from 'lucide-react';
 import { DealStage, Deal } from '../types';
 import { MOCK_DEALS, MOCK_CONTACTS } from '../constants';
-import { analyzeDealProbability } from '../services/geminiService';
+import { analyzeDealProbability } from '../services/aiService';
 import { CustomFieldInputs } from '../components/CustomFieldInputs';
 import { useCustomFields } from '../contexts/CustomFieldsContext';
 

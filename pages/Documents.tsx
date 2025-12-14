@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
@@ -17,10 +17,16 @@ import {
   Save,
   Lock,
   Key,
-  Copy
+  Copy,
+  Trash2,
+  CheckCircle2,
+  Info,
+  Sparkles,
+  Edit2
 } from 'lucide-react';
 import { MOCK_DOCUMENTS, MOCK_COMPANIES, CURRENT_USER, MOCK_CREDENTIALS } from '../constants';
 import { Document, SecureCredential } from '../types';
+import { summarizeDocument } from '../services/aiService';
 
 export const Documents: React.FC = () => {
   const navigate = useNavigate();
@@ -28,8 +34,27 @@ export const Documents: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [docs, setDocs] = useState<Document[]>(MOCK_DOCUMENTS);
   const [credentials, setCredentials] = useState<SecureCredential[]>(MOCK_CREDENTIALS);
+  
+  // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
+  
+  // Menu State
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [visibleCredentialIds, setVisibleCredentialIds] = useState<Set<string>>(new Set());
+  
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const getCompanyName = (id: string) => {
     return MOCK_COMPANIES.find(c => c.id === id)?.name || 'Unknown Company';
@@ -39,7 +64,11 @@ export const Documents: React.FC = () => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           getCompanyName(doc.companyId).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === 'all' || doc.category === activeTab;
-    return matchesSearch && matchesTab;
+    
+    // Permission Filter: Admins see everything. Users only see Granted docs.
+    const hasPermission = CURRENT_USER.role === 'admin' || doc.access === 'granted';
+
+    return matchesSearch && matchesTab && hasPermission;
   });
 
   const filteredCredentials = credentials.filter(cred => 
@@ -59,6 +88,37 @@ export const Documents: React.FC = () => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert('Copied to clipboard!');
+  };
+
+  const handleDeleteDoc = (id: string) => {
+    if (confirm("Are you sure you want to delete this document?")) {
+        setDocs(docs.filter(d => d.id !== id));
+        setActiveMenuId(null);
+    }
+  };
+
+  const handleDownload = (doc: Document) => {
+    // Simulate file download
+    const content = `Mock content for document: ${doc.title}\nUploaded by: ${doc.uploadedBy}\nDate: ${doc.uploadDate}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.title.replace(/\s+/g, '_')}.txt`; // Mocking as .txt
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleSummarize = async (doc: Document) => {
+      setActiveMenuId(null);
+      // Simulate file content read
+      const mockContent = `Content of ${doc.title}: This document outlines the key deliverables, milestones, and payment terms agreed upon between the parties. It includes detailed specifications for the project scope and risk mitigation strategies.`;
+      
+      const summary = await summarizeDocument(doc.title, mockContent);
+      
+      alert(`AI Summary for ${doc.title}:\n\n${summary}`);
   };
 
   const handleUpload = (e: React.FormEvent<HTMLFormElement>) => {
@@ -87,12 +147,20 @@ export const Documents: React.FC = () => {
             uploadDate: new Date().toISOString().split('T')[0],
             uploadedBy: CURRENT_USER.name,
             companyId: formData.get('companyId') as string,
-            url: '#'
+            url: '#',
+            // Admins approve automatically, users need approval
+            access: CURRENT_USER.role === 'admin' ? 'granted' : 'pending' 
         };
         
         setDocs([...docs, newDoc]);
       }
       setIsModalOpen(false);
+  };
+
+  const toggleAccess = (doc: Document) => {
+      const newAccess = doc.access === 'granted' ? 'denied' : 'granted';
+      setDocs(docs.map(d => d.id === doc.id ? { ...d, access: newAccess } : d));
+      setActiveMenuId(null);
   };
 
   return (
@@ -128,13 +196,16 @@ export const Documents: React.FC = () => {
               {activeTab === 'internal' && <ShieldAlert size={14} />}
               Internal Resources
             </button>
-            <button 
-              onClick={() => setActiveTab('secure')}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'secure' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              {activeTab === 'secure' && <Lock size={14} />}
-              Secure Vault
-            </button>
+            {/* Secure Vault is Admin Only */}
+            {CURRENT_USER.role === 'admin' && (
+              <button 
+                onClick={() => setActiveTab('secure')}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'secure' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                {activeTab === 'secure' && <Lock size={14} />}
+                Secure Vault
+              </button>
+            )}
             <button 
               onClick={() => setActiveTab('all')}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
@@ -160,8 +231,22 @@ export const Documents: React.FC = () => {
           </div>
         </div>
 
+        {/* Tab Context Info */}
+        {activeTab === 'internal' && (
+            <div className="bg-yellow-50 px-6 py-3 border-b border-yellow-100 flex items-start gap-3">
+                <Info size={18} className="text-yellow-700 mt-0.5" />
+                <div>
+                    <h3 className="text-sm font-medium text-yellow-800">Internal Business Resources</h3>
+                    <p className="text-xs text-yellow-700 mt-0.5">
+                        This section contains sensitive business documents such as training materials, business profiles, standard operating procedures (SOPs), and internal policies. 
+                        Access to these files is managed by the administrator.
+                    </p>
+                </div>
+            </div>
+        )}
+
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-[400px]">
           {activeTab === 'secure' ? (
             <div className="p-0">
                <table className="w-full text-left text-sm">
@@ -225,14 +310,15 @@ export const Documents: React.FC = () => {
                </table>
             </div>
           ) : (
+            <div className="pb-20"> {/* Extra padding for scrolling */}
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-600 font-medium sticky top-0 z-10 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3">Document Name</th>
                   <th className="px-6 py-3">Associated Company</th>
                   <th className="px-6 py-3">Type</th>
-                  <th className="px-6 py-3">Size</th>
-                  <th className="px-6 py-3">Uploaded By</th>
+                  <th className="px-6 py-3">Access</th>
+                  <th className="px-6 py-3">Uploaded</th>
                   <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -246,7 +332,7 @@ export const Documents: React.FC = () => {
                         </div>
                         <div>
                           <div className="font-medium text-gray-900">{doc.title}</div>
-                          <div className="text-xs text-gray-500">{doc.uploadDate}</div>
+                          <div className="text-xs text-gray-500">{doc.size}</div>
                         </div>
                       </div>
                     </td>
@@ -267,28 +353,85 @@ export const Documents: React.FC = () => {
                         {doc.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500 font-mono text-xs">
-                      {doc.size}
+                    <td className="px-6 py-4">
+                        {doc.access === 'denied' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700 text-xs font-medium">
+                                <Lock size={12} /> Restricted
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-medium">
+                                <CheckCircle2 size={12} /> Granted
+                            </span>
+                        )}
                     </td>
                     <td className="px-6 py-4 text-gray-500">
-                      <div className="flex items-center gap-2">
-                         <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-                           {doc.uploadedBy.charAt(0)}
-                         </div>
-                         <span>{doc.uploadedBy}</span>
+                      <div className="flex flex-col">
+                         <span className="text-xs">{doc.uploadDate}</span>
+                         <span className="text-xs text-gray-400">by {doc.uploadedBy}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 text-gray-400 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors" title="View">
+                      <div className="flex justify-end gap-2 items-center">
+                        <button 
+                            onClick={() => setPreviewDoc(doc)}
+                            className="p-2 text-gray-400 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors" 
+                            title="View"
+                        >
                           <Eye size={18} />
                         </button>
-                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Download">
+                        <button 
+                            onClick={() => handleDownload(doc)}
+                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" 
+                            title="Download"
+                        >
                           <Download size={18} />
                         </button>
-                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                          <MoreHorizontal size={18} />
-                        </button>
+                        
+                        {/* More Menu */}
+                        <div className="relative">
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenuId(activeMenuId === doc.id ? null : doc.id);
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${activeMenuId === doc.id ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                            >
+                                <MoreHorizontal size={18} />
+                            </button>
+                            
+                            {activeMenuId === doc.id && (
+                                <div ref={menuRef} className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-75">
+                                    <button 
+                                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-sm"
+                                        onClick={() => handleSummarize(doc)}
+                                    >
+                                        <Sparkles size={14} className="text-purple-600" /> 
+                                        <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-medium">Summarize with AI</span>
+                                    </button>
+                                    
+                                    {CURRENT_USER.role === 'admin' ? (
+                                      <>
+                                        <button 
+                                            className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-sm"
+                                            onClick={() => toggleAccess(doc)}
+                                        >
+                                            {doc.access === 'granted' ? <Lock size={14} /> : <CheckCircle2 size={14} />}
+                                            {doc.access === 'granted' ? 'Restrict Access' : 'Approve Access'}
+                                        </button>
+                                        <div className="border-t border-gray-100 my-1"></div>
+                                        <button 
+                                            onClick={() => handleDeleteDoc(doc.id)}
+                                            className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm"
+                                        >
+                                            <Trash2 size={14} /> Delete
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <div className="px-4 py-2 text-xs text-gray-500 text-center border-t border-gray-100 mt-1">No admin actions</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -299,18 +442,21 @@ export const Documents: React.FC = () => {
                       <div className="flex flex-col items-center justify-center gap-2">
                         <File className="text-gray-300" size={48} />
                         <p>No documents found.</p>
-                        <button 
-                          onClick={() => setIsModalOpen(true)}
-                          className="text-primary-600 hover:underline text-sm"
-                        >
-                          Upload your first document
-                        </button>
+                        {CURRENT_USER.role === 'admin' && (
+                          <button 
+                            onClick={() => setIsModalOpen(true)}
+                            className="text-primary-600 hover:underline text-sm"
+                          >
+                            Upload your first document
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -421,6 +567,53 @@ export const Documents: React.FC = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* File Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-gray-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setPreviewDoc(null)}>
+           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+               <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                   <div className="flex items-center gap-3">
+                       <div className="p-2 bg-gray-100 rounded-lg">
+                           <FileText size={20} className="text-gray-600" />
+                       </div>
+                       <div>
+                           <h3 className="font-bold text-gray-900">{previewDoc.title}</h3>
+                           <p className="text-xs text-gray-500">Uploaded on {previewDoc.uploadDate}</p>
+                       </div>
+                   </div>
+                   <div className="flex items-center gap-2">
+                       <button 
+                         onClick={() => handleDownload(previewDoc)}
+                         className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                         title="Download"
+                       >
+                           <Download size={20} />
+                       </button>
+                       <button 
+                         onClick={() => setPreviewDoc(null)}
+                         className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                       >
+                           <X size={20} />
+                       </button>
+                   </div>
+               </div>
+               <div className="flex-1 bg-gray-100 flex items-center justify-center p-8 overflow-hidden">
+                   <div className="bg-white shadow-lg p-16 text-center max-w-lg w-full rounded-lg">
+                       <FileText size={64} className="text-gray-300 mx-auto mb-4" />
+                       <h4 className="text-xl font-medium text-gray-900 mb-2">Preview Not Available</h4>
+                       <p className="text-gray-500 mb-6">This is a mock document. In a real app, the PDF or Image would render here.</p>
+                       <button 
+                         onClick={() => handleDownload(previewDoc)}
+                         className="bg-primary-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors"
+                       >
+                           Download File
+                       </button>
+                   </div>
+               </div>
+           </div>
         </div>
       )}
     </div>

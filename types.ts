@@ -1,5 +1,4 @@
 
-
 export enum DealStage {
   NEW = 'New',
   QUALIFIED = 'Qualified',
@@ -20,7 +19,7 @@ export type CustomFieldType = 'text' | 'number' | 'date' | 'email' | 'password' 
 
 export interface CustomFieldDefinition {
   id: string;
-  entityType: 'contact' | 'company' | 'deal' | 'project';
+  entityType: 'contact' | 'company' | 'deal' | 'project' | 'finance';
   label: string;
   key: string;
   type: CustomFieldType;
@@ -43,6 +42,16 @@ export interface AppConfig {
   smtpUser?: string;
   smtpPassword?: string;
   smtpSecure?: boolean;
+  // Invoice Customization
+  invoiceLogoUrl?: string;
+  invoiceTemplate?: 'classic' | 'minimal';
+  invoiceFooter?: string;
+  defaultPaymentDetails?: string;
+  // Theme
+  darkMode?: boolean;
+  // AI Settings
+  aiProvider: 'gemini' | 'puter';
+  geminiApiKey?: string;
 }
 
 export interface Company {
@@ -56,6 +65,7 @@ export interface Company {
   logoUrl?: string;
   description?: string;
   customFields?: Record<string, any>;
+  kraPin?: string;
 }
 
 export interface Contact {
@@ -93,6 +103,7 @@ export interface Activity {
   userId: string;
   contactId?: string;
   companyId?: string;
+  projectId?: string;
 }
 
 export interface User {
@@ -113,6 +124,7 @@ export interface Document {
   uploadedBy: string;
   companyId: string;
   url: string;
+  access?: 'granted' | 'denied' | 'pending';
 }
 
 export interface SecureCredential {
@@ -175,6 +187,7 @@ export interface Notification {
   time: string;
   read: boolean;
   type: 'info' | 'alert' | 'success';
+  link?: string; // URL path to navigate to when clicked
 }
 
 export interface EmailMessage {
@@ -188,6 +201,45 @@ export interface EmailMessage {
   time: string;
   date: string;
   unread: boolean;
-  folder: 'inbox' | 'sent' | 'drafts';
+  starred?: boolean;
+  folder: 'inbox' | 'sent' | 'drafts' | 'trash';
   attachments?: { name: string; size: string; type: string }[];
+}
+
+export interface Ticket {
+  id: string;
+  subject: string;
+  description: string;
+  status: 'New' | 'In Progress' | 'Waiting' | 'Resolved';
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  createdById: string; // Internal User ID who created the ticket
+  contactId?: string; // Optional link to external contact
+  assignedTo?: string; // User ID
+  createdAt: string;
+  tags?: string[];
+}
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface FinanceDocument {
+  id: string;
+  number: string; // e.g. INV-2023-001
+  type: 'Invoice' | 'Quote';
+  category?: 'Service' | 'Product';
+  status: 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Accepted' | 'Rejected';
+  contactId: string;
+  issueDate: string;
+  dueDate: string;
+  items: InvoiceItem[];
+  total: number;
+  notes?: string;
+  lsoNumber?: string;
+  legalEntityId?: string; // PIN No
+  paymentDetails?: string;
+  customFields?: Record<string, any>;
 }

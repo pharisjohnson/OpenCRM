@@ -1,16 +1,26 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Check, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
+import { Notification } from '../types';
 
 export const Notifications: React.FC = () => {
   const { notifications, markAsRead, markAllAsRead } = useNotifications();
+  const navigate = useNavigate();
 
   const getIcon = (type: string) => {
     switch (type) {
       case 'alert': return <AlertCircle size={18} />;
       case 'success': return <CheckCircle2 size={18} />;
       default: return <Info size={18} />;
+    }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead(notification.id);
+    if (notification.link) {
+      navigate(notification.link);
     }
   };
 
@@ -36,7 +46,7 @@ export const Notifications: React.FC = () => {
                     <div 
                         key={notification.id} 
                         className={`p-4 hover:bg-gray-50 transition-colors flex gap-4 cursor-pointer ${!notification.read ? 'bg-blue-50/40' : ''}`}
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => handleNotificationClick(notification)}
                     >
                         <div className={`mt-1 p-2 rounded-full flex-shrink-0 ${
                             notification.type === 'alert' ? 'bg-red-100 text-red-600' : 

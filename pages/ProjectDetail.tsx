@@ -18,9 +18,11 @@ import {
   Save,
   Database,
   Briefcase,
-  DollarSign
+  DollarSign,
+  MessageSquare,
+  Send
 } from 'lucide-react';
-import { MOCK_PROJECTS, MOCK_USERS, MOCK_COMPANIES, MOCK_CONTACTS, MOCK_DOCUMENTS, MOCK_TASKS, MOCK_DEALS } from '../constants';
+import { MOCK_PROJECTS, MOCK_USERS, MOCK_COMPANIES, MOCK_CONTACTS, MOCK_DOCUMENTS, MOCK_TASKS, MOCK_DEALS, CURRENT_USER } from '../constants';
 import { ProjectStatus, Task, Deal, DealStage, Project, Contact } from '../types';
 import { useCustomFields } from '../contexts/CustomFieldsContext';
 import { CustomFieldInputs } from '../components/CustomFieldInputs';
@@ -34,10 +36,18 @@ export const ProjectDetail: React.FC = () => {
   
   // State
   const [project, setProject] = useState<Project | undefined>(initialProject);
-  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'team' | 'resources'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'team' | 'resources' | 'discussion'>('overview');
   const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS.filter(t => t.projectId === id));
   const [allDeals, setAllDeals] = useState<Deal[]>(MOCK_DEALS); // Local state for deals to allow adding
   
+  // Discussion State
+  const [comments, setComments] = useState([
+    { id: 1, userId: 'u2', text: "I've uploaded the initial requirements doc to the Resources tab.", time: '2 days ago' },
+    { id: 2, userId: 'u1', text: "Thanks Sarah. I'll review the specs by EOD.", time: '2 days ago' },
+    { id: 3, userId: 'u3', text: "Can we schedule a sync for Friday to discuss the timeline?", time: 'Yesterday' }
+  ]);
+  const [newComment, setNewComment] = useState("");
+
   // Modals & Menu State
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -192,6 +202,18 @@ export const ProjectDetail: React.FC = () => {
     setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
   };
 
+  const handlePostComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!newComment.trim()) return;
+    setComments([...comments, {
+        id: Date.now(),
+        userId: CURRENT_USER.id,
+        text: newComment,
+        time: "Just now"
+    }]);
+    setNewComment("");
+  };
+
   return (
     <div className="space-y-6">
       <button 
@@ -326,6 +348,13 @@ export const ProjectDetail: React.FC = () => {
                 Tasks ({tasks.length})
               </button>
               <button 
+                onClick={() => setActiveTab('discussion')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'discussion' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              >
+                <MessageSquare size={16} />
+                Discussion
+              </button>
+              <button 
                 onClick={() => setActiveTab('team')}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'team' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
               >
@@ -335,7 +364,7 @@ export const ProjectDetail: React.FC = () => {
                 onClick={() => setActiveTab('resources')}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'resources' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
               >
-                Resources & Links
+                Resources
               </button>
            </div>
 
@@ -403,6 +432,55 @@ export const ProjectDetail: React.FC = () => {
                     ))}
                  </div>
                </div>
+             </div>
+           )}
+
+           {activeTab === 'discussion' && (
+             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in duration-300 flex flex-col h-[600px]">
+                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                    <h3 className="font-semibold text-gray-900">Project Discussion</h3>
+                    <p className="text-xs text-gray-500">Collaborate with the team specifically on this project.</p>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {comments.length > 0 ? (
+                        comments.map(comment => {
+                            const user = MOCK_USERS.find(u => u.id === comment.userId);
+                            const isMe = user?.id === CURRENT_USER.id;
+                            return (
+                                <div key={comment.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                    <img src={user?.avatarUrl} className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" alt={user?.name} />
+                                    <div className={`max-w-[80%] space-y-1 ${isMe ? 'items-end flex flex-col' : ''}`}>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-gray-700">{user?.name}</span>
+                                            <span className="text-[10px] text-gray-400">{comment.time}</span>
+                                        </div>
+                                        <div className={`p-3 text-sm rounded-xl ${isMe ? 'bg-primary-600 text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'}`}>
+                                            {comment.text}
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                            <MessageSquare size={40} className="mb-2 opacity-50" />
+                            <p>No comments yet. Start the discussion!</p>
+                        </div>
+                    )}
+                </div>
+                <div className="p-4 border-t border-gray-200 bg-white">
+                    <form onSubmit={handlePostComment} className="flex gap-2">
+                        <input 
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="Type a message..."
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                        <button type="submit" className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                            <Send size={18} />
+                        </button>
+                    </form>
+                </div>
              </div>
            )}
 

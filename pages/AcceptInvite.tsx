@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
 
 export const AcceptInvite: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useUser();
   const [step, setStep] = useState(1);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -29,6 +31,7 @@ export const AcceptInvite: React.FC = () => {
     }
     // Simulate API call to update user
     setTimeout(() => {
+        login();
         navigate('/');
     }, 1500);
     setStep(3);

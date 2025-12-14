@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Send, 
   Hash, 
@@ -8,16 +9,20 @@ import {
   Search,
   Bell,
   MessageCircle,
-  Users
+  Users,
+  ArrowLeft,
+  Menu
 } from 'lucide-react';
 import { MOCK_MESSAGES, MOCK_USERS, CURRENT_USER } from '../constants';
 import { ChatMessage, User } from '../types';
 
 export const Chat: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
   const [inputText, setInputText] = useState('');
   const [activeChannel, setActiveChannel] = useState('general');
   const [activeDmUser, setActiveDmUser] = useState<string | null>(null);
+  const [isMobileListVisible, setIsMobileListVisible] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -26,6 +31,21 @@ export const Chat: React.FC = () => {
     { id: 'announcements', name: 'Announcements', type: 'public' },
     { id: 'random', name: 'Random', type: 'public' },
   ];
+
+  useEffect(() => {
+    const channelParam = searchParams.get('channel');
+    const dmParam = searchParams.get('dm');
+
+    if (dmParam) {
+      setActiveDmUser(dmParam);
+      setActiveChannel('');
+      setIsMobileListVisible(false);
+    } else if (channelParam) {
+      setActiveChannel(channelParam);
+      setActiveDmUser(null);
+      setIsMobileListVisible(false);
+    }
+  }, [searchParams]);
 
   const filteredMessages = messages.filter(m => {
      if (activeDmUser) {
@@ -42,7 +62,7 @@ export const Chat: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [filteredMessages]);
+  }, [filteredMessages, isMobileListVisible]); // Scroll when view changes
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,12 +80,24 @@ export const Chat: React.FC = () => {
     setInputText('');
   };
 
+  const handleChannelSelect = (channelId: string) => {
+    setActiveChannel(channelId);
+    setActiveDmUser(null);
+    setIsMobileListVisible(false);
+  };
+
+  const handleUserSelect = (userId: string) => {
+    setActiveDmUser(userId);
+    setActiveChannel('');
+    setIsMobileListVisible(false);
+  };
+
   const getUser = (id: string) => MOCK_USERS.find(u => u.id === id);
 
   return (
     <div className="h-[calc(100vh-8rem)] bg-white rounded-xl border border-gray-200 shadow-sm flex overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+      {/* Sidebar List - Hidden on mobile when chat is visible */}
+      <div className={`w-full md:w-64 bg-gray-50 border-r border-gray-200 flex-col ${isMobileListVisible ? 'flex' : 'hidden md:flex'}`}>
         <div className="p-4 border-b border-gray-200">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
             <MessageCircle size={20} className="text-primary-600" />
@@ -80,7 +112,7 @@ export const Chat: React.FC = () => {
               {channels.map(channel => (
                 <button
                   key={channel.id}
-                  onClick={() => { setActiveChannel(channel.id); setActiveDmUser(null); }}
+                  onClick={() => handleChannelSelect(channel.id)}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors
                     ${activeChannel === channel.id && !activeDmUser ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-600 hover:bg-gray-200/50'}`}
                 >
@@ -97,7 +129,7 @@ export const Chat: React.FC = () => {
               {MOCK_USERS.filter(u => u.id !== CURRENT_USER.id).map(user => (
                 <button
                   key={user.id}
-                  onClick={() => { setActiveDmUser(user.id); setActiveChannel(''); }}
+                  onClick={() => handleUserSelect(user.id)}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors
                     ${activeDmUser === user.id ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-600 hover:bg-gray-200/50'}`}
                 >
@@ -119,40 +151,66 @@ export const Chat: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      {/* Main Chat Area - Hidden on mobile when list is visible */}
+      <div className={`flex-1 flex-col ${!isMobileListVisible ? 'flex' : 'hidden md:flex'}`}>
         {/* Header */}
-        <div className="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white">
-           <div className="flex items-center gap-2">
+        <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 md:px-6 bg-white shrink-0">
+           <div className="flex items-center gap-2 md:gap-3">
+              <button 
+                onClick={() => setIsMobileListVisible(true)}
+                className="md:hidden p-1.5 -ml-1.5 mr-1 text-gray-500 hover:bg-gray-100 rounded-lg"
+              >
+                <ArrowLeft size={20} />
+              </button>
+
               {activeDmUser ? (
                  <>
-                   <span className="font-bold text-gray-900">@{getUser(activeDmUser)?.name}</span>
-                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                   <div className="relative">
+                      {getUser(activeDmUser)?.avatarUrl ? (
+                          <img src={getUser(activeDmUser)?.avatarUrl} className="w-8 h-8 rounded-full" />
+                      ) : (
+                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                              <UserIcon size={16} />
+                          </div>
+                      )}
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                   </div>
+                   <div>
+                       <span className="font-bold text-gray-900 block leading-tight">@{getUser(activeDmUser)?.name}</span>
+                       <span className="text-xs text-gray-500 block leading-tight">Active now</span>
+                   </div>
                  </>
               ) : (
                  <>
-                   <Hash size={20} className="text-gray-400" />
-                   <span className="font-bold text-gray-900 capitalize">{activeChannel}</span>
-                   <span className="text-xs text-gray-500 ml-2">Team Notice Board</span>
+                   <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+                      <Hash size={18} />
+                   </div>
+                   <div>
+                       <span className="font-bold text-gray-900 block leading-tight capitalize">{activeChannel}</span>
+                       <span className="text-xs text-gray-500 block leading-tight">Team Notice Board</span>
+                   </div>
                  </>
               )}
            </div>
-           <div className="flex items-center gap-3">
+           <div className="flex items-center gap-2">
               <div className="relative hidden md:block">
                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                 <input className="pl-8 pr-3 py-1 text-sm bg-gray-50 border border-gray-200 rounded-md w-48 focus:outline-none focus:ring-1 focus:ring-primary-500" placeholder="Search messages" />
+                 <input className="pl-8 pr-3 py-1 text-sm bg-gray-50 border border-gray-200 rounded-md w-40 focus:outline-none focus:ring-1 focus:ring-primary-500" placeholder="Search" />
               </div>
-              <button className="text-gray-400 hover:text-gray-600">
+              <button className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg">
                  <Bell size={18} />
               </button>
-              <button className="text-gray-400 hover:text-gray-600">
-                 <MoreVertical size={18} />
+              <button 
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg md:hidden"
+                onClick={() => setIsMobileListVisible(true)}
+              >
+                 <Menu size={18} />
               </button>
            </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/30">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50/30">
            {filteredMessages.map((msg, idx) => {
               const isMe = msg.senderId === CURRENT_USER.id;
               const sender = getUser(msg.senderId);
@@ -172,11 +230,11 @@ export const Chat: React.FC = () => {
                        <div className="w-8 flex-shrink-0" />
                     )}
                     
-                    <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+                    <div className={`max-w-[85%] md:max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
                        {showHeader && !isMe && (
                           <span className="text-xs text-gray-500 mb-1 ml-1">{sender?.name}</span>
                        )}
-                       <div className={`px-4 py-2 rounded-2xl text-sm ${
+                       <div className={`px-4 py-2 rounded-2xl text-sm break-words ${
                           isMe 
                             ? 'bg-primary-600 text-white rounded-tr-none' 
                             : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'
@@ -194,7 +252,7 @@ export const Chat: React.FC = () => {
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-white border-t border-gray-200">
+        <div className="p-3 md:p-4 bg-white border-t border-gray-200">
            <form onSubmit={handleSendMessage} className="flex gap-2">
               <input 
                  className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
@@ -205,7 +263,7 @@ export const Chat: React.FC = () => {
               <button 
                 type="submit"
                 disabled={!inputText.trim()}
-                className="bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white p-2 rounded-lg transition-colors"
+                className="bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white p-2 rounded-lg transition-colors flex-shrink-0"
               >
                  <Send size={18} />
               </button>

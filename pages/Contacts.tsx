@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, Mail, Phone, Lock, LayoutGrid, List as ListIcon, X, Save, Edit2, Trash2, UploadCloud, FileSpreadsheet } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, Mail, Phone, Lock, LayoutGrid, List as ListIcon, X, Save, Edit2, Trash2, UploadCloud, FileSpreadsheet, Sparkles } from 'lucide-react';
 import { MOCK_CONTACTS } from '../constants';
 import { ContactStatus, Contact } from '../types';
 import { CustomFieldInputs } from '../components/CustomFieldInputs';
 import { useCustomFields } from '../contexts/CustomFieldsContext';
+import { generateContactIcebreaker } from '../services/aiService';
 
 export const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +35,12 @@ export const Contacts: React.FC = () => {
   const handleAddNew = () => {
     setEditingContact(null); // Null means new contact
     setIsModalOpen(true);
+  };
+
+  const handleIcebreaker = async (contact: Contact, e: React.MouseEvent) => {
+      e.stopPropagation();
+      const icebreaker = await generateContactIcebreaker(contact.name, contact.title || 'Professional', contact.company);
+      alert(`AI Suggestion for ${contact.name}:\n\n"${icebreaker}"`);
   };
 
   const handleSaveContact = (e: React.FormEvent<HTMLFormElement>) => {
@@ -244,6 +252,13 @@ export const Contacts: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                            className="p-2 text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg" 
+                            onClick={(e) => handleIcebreaker(contact, e)}
+                            title="Generate AI Icebreaker"
+                        >
+                          <Sparkles size={16} />
+                        </button>
                         <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg" onClick={(e) => e.stopPropagation()}>
                           <Mail size={16} />
                         </button>
@@ -313,6 +328,13 @@ export const Contacts: React.FC = () => {
                       {contact.status}
                    </span>
                    <div className="flex gap-2">
+                      <button 
+                        className="p-2 text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg" 
+                        onClick={(e) => handleIcebreaker(contact, e)}
+                        title="Generate AI Icebreaker"
+                      >
+                        <Sparkles size={16} />
+                      </button>
                       <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg" onClick={(e) => e.stopPropagation()}>
                         <Mail size={16} />
                       </button>

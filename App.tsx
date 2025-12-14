@@ -1,7 +1,6 @@
 
-
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { MemoryRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Contacts } from './pages/Contacts';
@@ -18,10 +17,50 @@ import { CalendarPage } from './pages/Calendar';
 import { Notifications } from './pages/Notifications';
 import { AcceptInvite } from './pages/AcceptInvite';
 import { Profile } from './pages/Profile';
+import { Helpdesk } from './pages/Helpdesk';
+import { Finance } from './pages/Finance';
+import { InvoicePrint } from './pages/InvoicePrint';
 import { CustomFieldsProvider } from './contexts/CustomFieldsContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-import { UserProvider } from './contexts/UserContext';
+import { UserProvider, useUser } from './contexts/UserContext';
 import { ConfigProvider } from './contexts/ConfigContext';
+
+// Auth Guard Component
+const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { isAuthenticated } = useUser();
+    if (!isAuthenticated) {
+        return <Navigate to="/accept-invite" replace />;
+    }
+    return <>{children}</>;
+};
+
+const AppRoutes: React.FC = () => {
+    return (
+        <Routes>
+            <Route path="/accept-invite" element={<AcceptInvite />} />
+            
+            {/* Protected Routes */}
+            <Route path="/" element={<RequireAuth><Layout><Dashboard /></Layout></RequireAuth>} />
+            <Route path="/profile" element={<RequireAuth><Layout><Profile /></Layout></RequireAuth>} />
+            <Route path="/chat" element={<RequireAuth><Layout><Chat /></Layout></RequireAuth>} />
+            <Route path="/calendar" element={<RequireAuth><Layout><CalendarPage /></Layout></RequireAuth>} />
+            <Route path="/notifications" element={<RequireAuth><Layout><Notifications /></Layout></RequireAuth>} />
+            <Route path="/helpdesk" element={<RequireAuth><Layout><Helpdesk /></Layout></RequireAuth>} />
+            <Route path="/finance" element={<RequireAuth><Layout><Finance /></Layout></RequireAuth>} />
+            <Route path="/finance/invoice/:id/print" element={<RequireAuth><Layout><InvoicePrint /></Layout></RequireAuth>} />
+            <Route path="/companies" element={<RequireAuth><Layout><Companies /></Layout></RequireAuth>} />
+            <Route path="/companies/:id" element={<RequireAuth><Layout><CompanyDetail /></Layout></RequireAuth>} />
+            <Route path="/contacts" element={<RequireAuth><Layout><Contacts /></Layout></RequireAuth>} />
+            <Route path="/deals" element={<RequireAuth><Layout><Deals /></Layout></RequireAuth>} />
+            <Route path="/projects" element={<RequireAuth><Layout><Projects /></Layout></RequireAuth>} />
+            <Route path="/projects/:id" element={<RequireAuth><Layout><ProjectDetail /></Layout></RequireAuth>} />
+            <Route path="/email" element={<RequireAuth><Layout><Email /></Layout></RequireAuth>} />
+            <Route path="/settings" element={<RequireAuth><Layout><Settings /></Layout></RequireAuth>} />
+            <Route path="/documents" element={<RequireAuth><Layout><Documents /></Layout></RequireAuth>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    );
+};
 
 const App: React.FC = () => {
   return (
@@ -30,26 +69,7 @@ const App: React.FC = () => {
         <CustomFieldsProvider>
           <NotificationProvider>
             <Router>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/accept-invite" element={<AcceptInvite />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/chat" element={<Chat />} />
-                  <Route path="/calendar" element={<CalendarPage />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/companies" element={<Companies />} />
-                  <Route path="/companies/:id" element={<CompanyDetail />} />
-                  <Route path="/contacts" element={<Contacts />} />
-                  <Route path="/deals" element={<Deals />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/projects/:id" element={<ProjectDetail />} />
-                  <Route path="/email" element={<Email />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/documents" element={<Documents />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Layout>
+                <AppRoutes />
             </Router>
           </NotificationProvider>
         </CustomFieldsProvider>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AppConfig } from '../types';
 
@@ -5,13 +6,18 @@ const DEFAULT_CONFIG: AppConfig = {
   appName: 'OpenCRM',
   primaryColor: '#0ea5e9', // Tailwind Sky-500
   fontFamily: 'Inter',
-  storageType: 'local'
+  storageType: 'local',
+  invoiceTemplate: 'classic',
+  invoiceFooter: 'Thank you for your business!',
+  darkMode: false,
+  aiProvider: 'gemini'
 };
 
 interface ConfigContextType {
   config: AppConfig;
   updateConfig: (updates: Partial<AppConfig>) => void;
   resetConfig: () => void;
+  toggleDarkMode: () => void;
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -27,13 +33,10 @@ const hexToRgb = (hex: string) => {
 };
 
 // Helper to generate a rough palette (50-900) from a base color
-// This is a simplified algorithm.
 const generatePalette = (hex: string) => {
   const rgb = hexToRgb(hex);
   if (!rgb) return null;
 
-  // We simply mix with white for lighter shades and black for darker shades
-  // In a real SaaS, we might use a library like 'chroma-js'
   const mix = (color: typeof rgb, mixColor: typeof rgb, weight: number) => ({
     r: Math.round(color.r * (1 - weight) + mixColor.r * weight),
     g: Math.round(color.g * (1 - weight) + mixColor.g * weight),
@@ -41,7 +44,7 @@ const generatePalette = (hex: string) => {
   });
 
   const white = { r: 255, g: 255, b: 255 };
-  const black = { r: 15, g: 23, b: 42 }; // Slate-900ish
+  const black = { r: 15, g: 23, b: 42 };
 
   return {
     50: mix(rgb, white, 0.95),
@@ -60,7 +63,8 @@ const generatePalette = (hex: string) => {
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [config, setConfig] = useState<AppConfig>(() => {
     const saved = localStorage.getItem('opencrm_config');
-    return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+    // Merge saved config with default
+    return saved ? { ...DEFAULT_CONFIG, ...JSON.parse(saved) } : DEFAULT_CONFIG;
   });
 
   const updateConfig = (updates: Partial<AppConfig>) => {
@@ -74,6 +78,15 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const resetConfig = () => {
     setConfig(DEFAULT_CONFIG);
     localStorage.removeItem('opencrm_config');
+  };
+
+  const toggleDarkMode = () => {
+    setConfig(prev => {
+        const newMode = !prev.darkMode;
+        const newConfig = { ...prev, darkMode: newMode };
+        localStorage.setItem('opencrm_config', JSON.stringify(newConfig));
+        return newConfig;
+    });
   };
 
   // Apply Theme Side Effects
@@ -94,10 +107,17 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // 3. Update Title
     document.title = config.appName;
 
-  }, [config.primaryColor, config.fontFamily, config.appName]);
+    // 4. Update Dark Mode
+    if (config.darkMode) {
+        root.classList.add('dark');
+    } else {
+        root.classList.remove('dark');
+    }
+
+  }, [config.primaryColor, config.fontFamily, config.appName, config.darkMode]);
 
   return (
-    <ConfigContext.Provider value={{ config, updateConfig, resetConfig }}>
+    <ConfigContext.Provider value={{ config, updateConfig, resetConfig, toggleDarkMode }}>
       {children}
     </ConfigContext.Provider>
   );

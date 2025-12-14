@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
-import { Camera, Lock, Mail, User, Shield, Check, Save } from 'lucide-react';
+import { Camera, Lock, Mail, User, Shield, Check, Save, Bell, Globe, Moon } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
+import { useConfig } from '../contexts/ConfigContext';
 
 export const Profile: React.FC = () => {
   const { currentUser, updateCurrentUser } = useUser();
+  const { config, toggleDarkMode } = useConfig();
   const [isSaving, setIsSaving] = useState(false);
   const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' });
 
@@ -48,57 +50,71 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-        <p className="text-gray-500">Manage your profile information and security.</p>
+    <div className="max-w-6xl mx-auto pb-10">
+      {/* Profile Header Banner */}
+      <div className="relative h-48 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 overflow-hidden shadow-md mb-12">
+         <div className="absolute inset-0 bg-black/10"></div>
+         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/50 to-transparent">
+            <h1 className="text-3xl font-bold text-white tracking-tight">Account Settings</h1>
+            <p className="text-primary-100 opacity-90 text-sm">Manage your personal details and workspace preferences.</p>
+         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Profile Card */}
-        <div className="md:col-span-1 space-y-6">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col items-center text-center">
-                <div className="relative group cursor-pointer mb-4">
-                    <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
-                        {currentUser.avatarUrl ? (
-                            <img src={currentUser.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                            <User className="text-gray-400" size={40} />
-                        )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2 -mt-20 relative z-10">
+        {/* Left Column: Profile Card & Quick Stats */}
+        <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm p-6 flex flex-col items-center text-center">
+                <div className="relative group cursor-pointer mb-4 -mt-16">
+                    <div className="w-32 h-32 rounded-full bg-white dark:bg-dark-surface p-1 shadow-lg">
+                        <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-dark-border relative">
+                            {currentUser.avatarUrl ? (
+                                <img src={currentUser.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <User className="text-gray-400" size={48} />
+                            )}
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="text-white" size={24} />
+                            </div>
+                        </div>
                     </div>
-                    <label className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
-                        <Camera size={20} />
-                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
-                    </label>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
                 </div>
                 
-                <h2 className="text-lg font-bold text-gray-900">{currentUser.name}</h2>
-                <p className="text-sm text-gray-500 mb-3">{currentUser.email}</p>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 capitalize">
-                    {currentUser.role}
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{currentUser.name}</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{currentUser.email}</p>
+                
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide
+                    ${currentUser.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}
+                `}>
+                    <Shield size={12} className="mr-1.5" />
+                    {currentUser.role} Account
                 </span>
             </div>
 
-             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Role Permissions</h3>
+             <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm p-6">
+                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Permissions</h3>
                 <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                        <Check size={16} className="text-green-500" />
-                        <span>View Dashboard</span>
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <div className="p-1 rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"><Check size={12} /></div>
+                        <span>View Dashboard Analytics</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                        <Check size={16} className="text-green-500" />
-                        <span>Manage Contacts</span>
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <div className="p-1 rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"><Check size={12} /></div>
+                        <span>Manage Contacts & Deals</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <div className="p-1 rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"><Check size={12} /></div>
+                        <span>Access Document Vault</span>
                     </div>
                     {currentUser.role === 'admin' && (
                         <>
-                             <div className="flex items-center gap-3 text-sm text-gray-600">
-                                <Check size={16} className="text-green-500" />
-                                <span>Manage Users</span>
+                             <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                                <div className="p-1 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"><Check size={12} /></div>
+                                <span className="font-medium text-purple-700 dark:text-purple-400">Manage Team Users</span>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-600">
-                                <Check size={16} className="text-green-500" />
-                                <span>System Settings</span>
+                            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                                <div className="p-1 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"><Check size={12} /></div>
+                                <span className="font-medium text-purple-700 dark:text-purple-400">System Configuration</span>
                             </div>
                         </>
                     )}
@@ -106,98 +122,146 @@ export const Profile: React.FC = () => {
              </div>
         </div>
 
-        {/* Right Column: Forms */}
-        <div className="md:col-span-2 space-y-6">
+        {/* Right Column: Forms & Settings */}
+        <div className="lg:col-span-2 space-y-6">
             {/* Personal Details */}
-            <form onSubmit={handleUpdateProfile} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <User size={20} className="text-gray-400" />
-                    Personal Information
-                </h3>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                        <input 
-                            name="name"
-                            defaultValue={currentUser.name}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <form onSubmit={handleUpdateProfile} className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/50 flex justify-between items-center">
+                    <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <User size={18} className="text-primary-600 dark:text-primary-400" />
+                        Personal Information
+                    </h3>
+                </div>
+                <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                             <input 
-                                name="email"
-                                type="email"
-                                defaultValue={currentUser.email}
-                                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                name="name"
+                                defaultValue={currentUser.name}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white transition-shadow"
                             />
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input 
+                                    name="email"
+                                    type="email"
+                                    defaultValue={currentUser.email}
+                                    className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white transition-shadow"
+                                />
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div className="mt-6 flex justify-end">
-                    <button 
-                        type="submit"
-                        disabled={isSaving}
-                        className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-70"
-                    >
-                        <Save size={18} />
-                        {isSaving ? 'Saving...' : 'Save Changes'}
-                    </button>
+                    <div className="flex justify-end">
+                        <button 
+                            type="submit"
+                            disabled={isSaving}
+                            className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all disabled:opacity-70 shadow-sm hover:shadow"
+                        >
+                            <Save size={16} />
+                            {isSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </div>
                 </div>
             </form>
 
-            {/* Security */}
-            <form onSubmit={handlePasswordChange} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Shield size={20} className="text-gray-400" />
-                    Security
-                </h3>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                            <input 
-                                type="password" 
-                                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                value={passwordData.current}
-                                onChange={e => setPasswordData({...passwordData, current: e.target.value})}
-                            />
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Security */}
+                <form onSubmit={handlePasswordChange} className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden flex flex-col h-full">
+                    <div className="px-6 py-4 border-b border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/50">
+                        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Shield size={18} className="text-primary-600 dark:text-primary-400" />
+                            Security
+                        </h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-6 space-y-4 flex-1">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input 
+                                    type="password" 
+                                    className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                    value={passwordData.current}
+                                    onChange={e => setPasswordData({...passwordData, current: e.target.value})}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
                             <input 
                                 type="password" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
                                 value={passwordData.new}
                                 onChange={e => setPasswordData({...passwordData, new: e.target.value})}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
                             <input 
                                 type="password" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
                                 value={passwordData.confirm}
                                 onChange={e => setPasswordData({...passwordData, confirm: e.target.value})}
                             />
                         </div>
+                        <div className="pt-2 mt-auto">
+                            <button 
+                                type="submit"
+                                disabled={isSaving || !passwordData.current}
+                                className="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-border px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                            >
+                                Update Password
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                {/* Preferences */}
+                <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden flex flex-col h-full">
+                    <div className="px-6 py-4 border-b border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/50">
+                        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Globe size={18} className="text-primary-600 dark:text-primary-400" />
+                            Preferences
+                        </h3>
+                    </div>
+                    <div className="p-6 space-y-6 flex-1">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gray-100 dark:bg-dark-bg rounded-lg text-gray-600 dark:text-gray-300">
+                                    <Moon size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">Dark Mode</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Toggle dark theme</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={toggleDarkMode}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${config.darkMode ? 'bg-primary-600' : 'bg-gray-200'}`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gray-100 dark:bg-dark-bg rounded-lg text-gray-600 dark:text-gray-300">
+                                    <Bell size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">Email Digests</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Receive daily summaries</p>
+                                </div>
+                            </div>
+                            <input type="checkbox" className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500" defaultChecked />
+                        </div>
                     </div>
                 </div>
-                <div className="mt-6 flex justify-end">
-                    <button 
-                         type="submit"
-                        disabled={isSaving || !passwordData.current}
-                        className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    >
-                        Update Password
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
       </div>
     </div>

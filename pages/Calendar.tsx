@@ -144,7 +144,11 @@ export const CalendarPage: React.FC = () => {
                         {/* Add button on hover */}
                         <button 
                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary-600 transition-opacity"
-                           onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                           onClick={(e) => { 
+                             e.stopPropagation(); 
+                             setSelectedDate(dateString);
+                             setIsModalOpen(true); 
+                           }}
                         >
                            <Plus size={16} />
                         </button>

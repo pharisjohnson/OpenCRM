@@ -1,6 +1,5 @@
 
-
-import { Contact, Deal, DealStage, ContactStatus, User, Company, Activity, Document, Project, Task, SecureCredential, ChatMessage, CalendarEvent, Notification } from './types';
+import { Contact, Deal, DealStage, ContactStatus, User, Company, Activity, Document, Project, Task, SecureCredential, ChatMessage, CalendarEvent, Notification, Ticket, FinanceDocument } from './types';
 
 export const CURRENT_USER: User = {
   id: 'u1',
@@ -61,6 +60,17 @@ export const MOCK_COMPANIES: Company[] = [
     annualRevenue: '$85B',
     description: 'Premier clean energy and advanced weapons manufacturer.',
     logoUrl: 'https://ui-avatars.com/api/?name=SI&background=f00&color=fff'
+  },
+  {
+    id: 'co4',
+    name: 'Ministry of Foreign Affairs',
+    domain: 'mfa.go.ke',
+    industry: 'Government',
+    address: 'Old Treasury Building, Harambee Avenue, Nairobi',
+    employeeCount: '1000+',
+    annualRevenue: '-',
+    description: 'Government ministry.',
+    logoUrl: 'https://ui-avatars.com/api/?name=MFA&background=222&color=fff'
   }
 ];
 
@@ -102,6 +112,19 @@ export const MOCK_CONTACTS: Contact[] = [
     status: ContactStatus.LEAD,
     lastContacted: '2023-10-27',
     tags: ['Defense', 'High Value'],
+    ownerId: 'u1'
+  },
+  {
+    id: 'c4',
+    name: 'Accounts Payable',
+    title: 'Finance Dept',
+    email: 'accounts@mfa.go.ke',
+    phone: '-',
+    company: 'Ministry of Foreign Affairs',
+    companyId: 'co4',
+    status: ContactStatus.CUSTOMER,
+    lastContacted: '2025-12-01',
+    tags: ['Government'],
     ownerId: 'u1'
   }
 ];
@@ -381,15 +404,17 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     message: 'You have been assigned to the "Stark Industries Supply" deal.',
     time: '2 hours ago',
     read: false,
-    type: 'info'
+    type: 'info',
+    link: '/deals'
   },
   {
     id: 'n2',
-    title: 'Meeting Reminder',
-    message: 'Q4 Strategy Meeting starts in 30 minutes.',
+    title: 'New Message from Sarah',
+    message: 'Sarah sent you a direct message: "Hey, are you free for a quick call?"',
     time: '13:30',
     read: false,
-    type: 'alert'
+    type: 'alert',
+    link: '/chat?dm=u2'
   },
   {
     id: 'n3',
@@ -397,6 +422,103 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     message: 'Sarah marked "Update Firmware" as done.',
     time: 'Yesterday',
     read: true,
-    type: 'success'
+    type: 'success',
+    link: '/projects/p1'
+  }
+];
+
+export const MOCK_TICKETS: Ticket[] = [
+  {
+    id: 't1',
+    subject: 'Unable to access dashboard',
+    status: 'New',
+    priority: 'High',
+    createdById: 'u2', // Sarah
+    assignedTo: 'u1',
+    createdAt: '2023-10-27',
+    description: 'User gets a 403 error when trying to view the analytics panel.'
+  },
+  {
+    id: 't2',
+    subject: 'Request for new features',
+    status: 'In Progress',
+    priority: 'Low',
+    createdById: 'u3', // Bruce
+    assignedTo: 'u2',
+    createdAt: '2023-10-25',
+    description: 'Client wants to know if we support dark mode.'
+  },
+  {
+    id: 't3',
+    subject: 'Billing discrepancy',
+    status: 'Waiting',
+    priority: 'Medium',
+    createdById: 'u2', // Sarah
+    assignedTo: 'u3',
+    createdAt: '2023-10-26',
+    description: 'Invoice #INV-001 shows incorrect tax amount.'
+  }
+];
+
+export const MOCK_FINANCE: FinanceDocument[] = [
+  {
+    id: 'f1',
+    number: 'INV-2023-001',
+    type: 'Invoice',
+    category: 'Service',
+    status: 'Paid',
+    contactId: 'c1',
+    issueDate: '2023-10-01',
+    dueDate: '2023-10-15',
+    total: 15000,
+    items: [
+      { id: 'i1', description: 'T-800 Software License', quantity: 1, unitPrice: 15000 }
+    ]
+  },
+  {
+    id: 'f2',
+    number: 'QT-2023-042',
+    type: 'Quote',
+    category: 'Service',
+    status: 'Sent',
+    contactId: 'c2',
+    issueDate: '2023-10-28',
+    dueDate: '2023-11-28',
+    total: 500000,
+    items: [
+      { id: 'i2', description: 'Batmobile Retrofit Service', quantity: 1, unitPrice: 450000 },
+      { id: 'i3', description: 'Stealth Coating', quantity: 1, unitPrice: 50000 }
+    ]
+  },
+  {
+    id: 'f3',
+    number: 'INV-2023-002',
+    type: 'Invoice',
+    category: 'Product',
+    status: 'Overdue',
+    contactId: 'c3',
+    issueDate: '2023-09-15',
+    dueDate: '2023-10-15',
+    total: 1200000,
+    items: [
+        { id: 'i4', description: 'Arc Reactor Core (Palladium)', quantity: 10, unitPrice: 120000 }
+    ]
+  },
+  {
+    id: 'f4',
+    number: '4021',
+    type: 'Invoice',
+    category: 'Product',
+    status: 'Sent',
+    contactId: 'c4', // Accounts Payable at MFA
+    issueDate: '2025-12-01',
+    dueDate: '2026-01-01',
+    lsoNumber: '2392021',
+    legalEntityId: 'P051239913C', // PIN
+    total: 1080000,
+    items: [
+      { id: 'i5', description: 'Quotation for 120 copies of Best of Kenya Beyond 60 @ Ksh. 9,000 per copy', quantity: 120, unitPrice: 9000 }
+    ],
+    paymentDetails: "Account Details: Account Name - Global Village Publishers (EA) Ltd -\nEquity Bank, Mombasa Road Branch, Ac No. 0260293429681\nCheques Payable to Global Village Publishers (EA) Ltd"
   }
 ];
