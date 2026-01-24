@@ -37,7 +37,8 @@ export const MOCK_COMPANIES: Company[] = [
     employeeCount: '50-100',
     annualRevenue: '$50M',
     description: 'Leading manufacturer of autonomous cybernetic organisms and defense systems.',
-    logoUrl: 'https://ui-avatars.com/api/?name=TN&background=333&color=fff'
+    logoUrl: 'https://ui-avatars.com/api/?name=TN&background=333&color=fff',
+    organizationId: 'org1'
   },
   {
     id: 'co2',
@@ -48,7 +49,8 @@ export const MOCK_COMPANIES: Company[] = [
     employeeCount: '10,000+',
     annualRevenue: '$120B',
     description: 'Multinational conglomerate focused on defense, energy, and technology sectors.',
-    logoUrl: 'https://ui-avatars.com/api/?name=WE&background=111&color=fff'
+    logoUrl: 'https://ui-avatars.com/api/?name=WE&background=111&color=fff',
+    organizationId: 'org1'
   },
   {
     id: 'co3',
@@ -59,7 +61,8 @@ export const MOCK_COMPANIES: Company[] = [
     employeeCount: '5,000+',
     annualRevenue: '$85B',
     description: 'Premier clean energy and advanced weapons manufacturer.',
-    logoUrl: 'https://ui-avatars.com/api/?name=SI&background=f00&color=fff'
+    logoUrl: 'https://ui-avatars.com/api/?name=SI&background=f00&color=fff',
+    organizationId: 'org1'
   },
   {
     id: 'co4',
@@ -70,7 +73,8 @@ export const MOCK_COMPANIES: Company[] = [
     employeeCount: '1000+',
     annualRevenue: '-',
     description: 'Government ministry.',
-    logoUrl: 'https://ui-avatars.com/api/?name=MFA&background=222&color=fff'
+    logoUrl: 'https://ui-avatars.com/api/?name=MFA&background=222&color=fff',
+    organizationId: 'org1'
   }
 ];
 
@@ -86,7 +90,8 @@ export const MOCK_CONTACTS: Contact[] = [
     status: ContactStatus.LEAD,
     lastContacted: '2023-10-25',
     tags: ['VIP', 'Urgent'],
-    ownerId: 'u1'
+    ownerId: 'u1',
+    organizationId: 'org1'
   },
   {
     id: 'c2',
@@ -99,7 +104,8 @@ export const MOCK_CONTACTS: Contact[] = [
     status: ContactStatus.CUSTOMER,
     lastContacted: '2023-10-20',
     tags: ['Enterprise', 'Tech'],
-    ownerId: 'u1'
+    ownerId: 'u1',
+    organizationId: 'org1'
   },
   {
     id: 'c3',
@@ -112,7 +118,8 @@ export const MOCK_CONTACTS: Contact[] = [
     status: ContactStatus.LEAD,
     lastContacted: '2023-10-27',
     tags: ['Defense', 'High Value'],
-    ownerId: 'u1'
+    ownerId: 'u1',
+    organizationId: 'org1'
   },
   {
     id: 'c4',
@@ -125,7 +132,8 @@ export const MOCK_CONTACTS: Contact[] = [
     status: ContactStatus.CUSTOMER,
     lastContacted: '2025-12-01',
     tags: ['Government'],
-    ownerId: 'u1'
+    ownerId: 'u1',
+    organizationId: 'org1'
   }
 ];
 
@@ -137,7 +145,8 @@ export const MOCK_DEALS: Deal[] = [
     stage: DealStage.NEGOTIATION,
     contactId: 'c1',
     expectedCloseDate: '2023-12-01',
-    probability: 75
+    probability: 75,
+    organizationId: 'org1'
   },
   {
     id: 'd2',
@@ -146,7 +155,8 @@ export const MOCK_DEALS: Deal[] = [
     stage: DealStage.QUALIFIED,
     contactId: 'c2',
     expectedCloseDate: '2024-01-15',
-    probability: 40
+    probability: 40,
+    organizationId: 'org1'
   },
   {
     id: 'd3',
@@ -155,7 +165,8 @@ export const MOCK_DEALS: Deal[] = [
     stage: DealStage.NEW,
     contactId: 'c3',
     expectedCloseDate: '2024-02-20',
-    probability: 20
+    probability: 20,
+    organizationId: 'org1'
   }
 ];
 
@@ -501,7 +512,7 @@ export const MOCK_FINANCE: FinanceDocument[] = [
     dueDate: '2023-10-15',
     total: 1200000,
     items: [
-        { id: 'i4', description: 'Arc Reactor Core (Palladium)', quantity: 10, unitPrice: 120000 }
+      { id: 'i4', description: 'Arc Reactor Core (Palladium)', quantity: 10, unitPrice: 120000 }
     ]
   },
   {

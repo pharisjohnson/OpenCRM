@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Ideally this comes from process.env.API_KEY, but for safety in this demo context we handle missing keys gracefully.
-const API_KEY = process.env.API_KEY || '';
+const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
@@ -17,10 +17,10 @@ export const generateEmailDraft = async (recipientName: string, context: string)
     Keep it under 150 words. Sign off as 'The Team'.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash-exp',
       contents: prompt,
     });
-    
+
     return response.text || "Could not generate draft.";
   } catch (error) {
     console.error("Gemini API Error:", error);
@@ -40,7 +40,7 @@ export const analyzeDealProbability = async (dealTitle: string, stage: string, v
     Provide a 1-sentence strategic advice on how to close this deal based on standard B2B sales practices.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash-exp',
       contents: prompt,
     });
 

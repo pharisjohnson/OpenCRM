@@ -17,12 +17,12 @@ export const CustomFieldInputs: React.FC<CustomFieldInputsProps> = ({ entityType
   const existingValues = currentData?.customFields || {};
 
   return (
-    <div className="space-y-4 border-t border-gray-100 pt-4 mt-4">
-      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Additional Information</h3>
+    <div className="space-y-4 border-t border-gray-100 dark:border-dark-border pt-4 mt-4">
+      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Additional Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {fields.map((field) => (
           <div key={field.id} className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {field.label} {field.required && <span className="text-red-500">*</span>}
             </label>
             <input
@@ -31,7 +31,7 @@ export const CustomFieldInputs: React.FC<CustomFieldInputsProps> = ({ entityType
               defaultValue={existingValues[field.key] || ''}
               required={field.required}
               placeholder={field.label}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
             />
           </div>
         ))}

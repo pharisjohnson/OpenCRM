@@ -1,4 +1,6 @@
 
+"use client";
+
 import React, { createContext, useContext, useState } from 'react';
 import { MOCK_NOTIFICATIONS } from '../constants';
 import { Notification } from '../types';

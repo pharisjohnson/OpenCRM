@@ -1,4 +1,6 @@
 
+"use client";
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CustomFieldDefinition } from '../types';
 
@@ -12,14 +14,26 @@ interface CustomFieldsContextType {
 const CustomFieldsContext = createContext<CustomFieldsContextType | undefined>(undefined);
 
 export const CustomFieldsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [fields, setFields] = useState<CustomFieldDefinition[]>(() => {
-    const saved = localStorage.getItem('opencrm_custom_fields');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [fields, setFields] = useState<CustomFieldDefinition[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('opencrm_custom_fields', JSON.stringify(fields));
-  }, [fields]);
+    const saved = localStorage.getItem('opencrm_custom_fields');
+    if (saved) {
+      try {
+        setFields(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse custom fields', e);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('opencrm_custom_fields', JSON.stringify(fields));
+    }
+  }, [fields, isLoaded]);
 
   const addField = (field: Omit<CustomFieldDefinition, 'id'>) => {
     const newField = {

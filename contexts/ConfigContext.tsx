@@ -1,6 +1,10 @@
 
+"use client";
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AppConfig } from '../types';
+import { useUser } from './UserContext';
+import { supabase } from '../lib/supabaseClient';
 
 const DEFAULT_CONFIG: AppConfig = {
   appName: 'OpenCRM',
@@ -10,7 +14,13 @@ const DEFAULT_CONFIG: AppConfig = {
   invoiceTemplate: 'classic',
   invoiceFooter: 'Thank you for your business!',
   darkMode: false,
-  aiProvider: 'gemini'
+  aiProvider: 'gemini',
+  accessibility: {
+    highContrast: false,
+    fontSize: 'normal',
+    reduceMotion: false
+  },
+  onboardingCompleted: false
 };
 
 interface ConfigContextType {
@@ -18,6 +28,7 @@ interface ConfigContextType {
   updateConfig: (updates: Partial<AppConfig>) => void;
   resetConfig: () => void;
   toggleDarkMode: () => void;
+  isLoaded: boolean;
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -61,42 +72,92 @@ const generatePalette = (hex: string) => {
 };
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [config, setConfig] = useState<AppConfig>(() => {
-    const saved = localStorage.getItem('opencrm_config');
-    // Merge saved config with default
-    return saved ? { ...DEFAULT_CONFIG, ...JSON.parse(saved) } : DEFAULT_CONFIG;
-  });
+  const { currentOrganization } = useUser();
+  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const updateConfig = (updates: Partial<AppConfig>) => {
-    setConfig(prev => {
-      const newConfig = { ...prev, ...updates };
+  useEffect(() => {
+    // 1. Load Local Overrides (e.g. Dark Mode preferred locally)
+    const localSaved = localStorage.getItem('opencrm_local_config');
+    const localOverrides = localSaved ? JSON.parse(localSaved) : {};
+
+    // 2. If Org active, use Org Settings
+    if (currentOrganization) {
+      const orgSettings = currentOrganization.settings || {};
+      setConfig({
+        ...DEFAULT_CONFIG,
+        ...orgSettings,
+        appName: currentOrganization.name,
+        primaryColor: currentOrganization.primary_color || DEFAULT_CONFIG.primaryColor,
+        ...localOverrides
+      });
+    } else {
+      // Use fallback/mock config from localStorage or default
+      const saved = localStorage.getItem('opencrm_config');
+      if (saved) {
+        setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved), ...localOverrides });
+      } else {
+        setConfig({ ...DEFAULT_CONFIG, ...localOverrides });
+      }
+    }
+    setIsLoaded(true);
+  }, [currentOrganization]);
+
+  const updateConfig = async (updates: Partial<AppConfig>) => {
+    const newConfig = { ...config, ...updates };
+    setConfig(newConfig);
+
+    // Persist to Supabase if we have an organization
+    if (currentOrganization) {
+      try {
+        const { error } = await supabase
+          .from('organizations')
+          .update({
+            settings: newConfig,
+            name: newConfig.appName,
+            primary_color: newConfig.primaryColor
+          })
+          .eq('id', currentOrganization.id);
+
+        if (error) throw error;
+      } catch (e) {
+        console.error('Failed to update organization settings:', e);
+      }
+    } else {
       localStorage.setItem('opencrm_config', JSON.stringify(newConfig));
-      return newConfig;
-    });
+    }
+
+    // Keep some things local (like dark mode and accessibility preferred on this machine)
+    if ('darkMode' in updates || 'accessibility' in updates) {
+      const currentLocal = localStorage.getItem('opencrm_local_config');
+      const parsedLocal = currentLocal ? JSON.parse(currentLocal) : {};
+
+      const newLocal = {
+        ...parsedLocal,
+        ...(updates.darkMode !== undefined ? { darkMode: updates.darkMode } : {}),
+        ...(updates.accessibility ? { accessibility: { ...config.accessibility, ...updates.accessibility } } : {})
+      };
+
+      localStorage.setItem('opencrm_local_config', JSON.stringify(newLocal));
+    }
   };
 
   const resetConfig = () => {
     setConfig(DEFAULT_CONFIG);
     localStorage.removeItem('opencrm_config');
+    localStorage.removeItem('opencrm_local_config');
   };
 
   const toggleDarkMode = () => {
-    setConfig(prev => {
-        const newMode = !prev.darkMode;
-        const newConfig = { ...prev, darkMode: newMode };
-        localStorage.setItem('opencrm_config', JSON.stringify(newConfig));
-        return newConfig;
-    });
+    const newMode = !config.darkMode;
+    updateConfig({ darkMode: newMode });
   };
 
   // Apply Theme Side Effects
   useEffect(() => {
     const root = document.documentElement;
-    
-    // 1. Update Font
     root.style.setProperty('--font-family', `'${config.fontFamily}'`);
 
-    // 2. Update Colors
     const palette = generatePalette(config.primaryColor);
     if (palette) {
       Object.entries(palette).forEach(([shade, rgb]) => {
@@ -104,20 +165,39 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     }
 
-    // 3. Update Title
     document.title = config.appName;
 
-    // 4. Update Dark Mode
     if (config.darkMode) {
-        root.classList.add('dark');
+      root.classList.add('dark');
     } else {
-        root.classList.remove('dark');
+      root.classList.remove('dark');
     }
 
-  }, [config.primaryColor, config.fontFamily, config.appName, config.darkMode]);
+    // Apply Accessibility Settings
+    if (config.accessibility?.highContrast) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+
+    if (config.accessibility?.reduceMotion) {
+      root.classList.add('reduce-motion');
+    } else {
+      root.classList.remove('reduce-motion');
+    }
+
+    // Font Size
+    root.classList.remove('font-size-normal', 'font-size-medium', 'font-size-large');
+    if (config.accessibility?.fontSize) {
+      root.classList.add(`font-size-${config.accessibility.fontSize}`);
+    } else {
+      root.classList.add('font-size-normal');
+    }
+
+  }, [config.primaryColor, config.fontFamily, config.appName, config.darkMode, config.accessibility]);
 
   return (
-    <ConfigContext.Provider value={{ config, updateConfig, resetConfig, toggleDarkMode }}>
+    <ConfigContext.Provider value={{ config, updateConfig, resetConfig, toggleDarkMode, isLoaded }}>
       {children}
     </ConfigContext.Provider>
   );

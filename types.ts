@@ -52,6 +52,14 @@ export interface AppConfig {
   // AI Settings
   aiProvider: 'gemini' | 'puter';
   geminiApiKey?: string;
+  accessibility?: AccessibilityConfig;
+  onboardingCompleted?: boolean;
+}
+
+export interface AccessibilityConfig {
+  highContrast: boolean;
+  fontSize: 'normal' | 'medium' | 'large';
+  reduceMotion: boolean;
 }
 
 export interface Company {
@@ -66,6 +74,7 @@ export interface Company {
   description?: string;
   customFields?: Record<string, any>;
   kraPin?: string;
+  organizationId: string;
 }
 
 export interface Contact {
@@ -75,12 +84,13 @@ export interface Contact {
   email: string;
   phone: string;
   company: string;
-  companyId?: string; 
+  companyId?: string;
   status: ContactStatus;
   lastContacted: string;
   tags: string[];
   ownerId: string;
   customFields?: Record<string, any>;
+  organizationId: string;
 }
 
 export interface Deal {
@@ -92,6 +102,7 @@ export interface Deal {
   expectedCloseDate: string;
   probability: number;
   customFields?: Record<string, any>;
+  organizationId: string;
 }
 
 export interface Activity {
@@ -110,8 +121,46 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'owner';
   avatarUrl?: string;
+  coverImageUrl?: string;
+  currentOrganizationId?: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  settings: Partial<AppConfig>;
+  primary_color?: string;
+  createdAt: string;
+  subscription_status?: 'trial' | 'active' | 'expired' | 'cancelled';
+  subscription_plan?: 'free' | 'starter' | 'professional' | 'enterprise';
+  trial_start_date?: string;
+  trial_end_date?: string;
+  max_team_members?: number;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+}
+
+export interface Membership {
+  id: string;
+  userId: string;
+  organizationId: string;
+  role: 'admin' | 'member' | 'owner';
+  createdAt: string;
+}
+
+export interface Invitation {
+  id: string;
+  organization_id: string;
+  invited_by: string;
+  email: string;
+  role: 'admin' | 'member';
+  token: string;
+  status: 'pending' | 'accepted' | 'expired';
+  expires_at: string;
+  created_at: string;
 }
 
 export interface Document {

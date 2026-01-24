@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Default Blue Theme (Tailwind Sky-500 base approx) */
+  --color-primary-50: 240 249 255;
+  --color-primary-100: 224 242 254;
+  --color-primary-200: 186 230 253;
+  --color-primary-300: 125 211 252;
+  --color-primary-400: 56 189 248;
+  --color-primary-500: 14 165 233;
+  --color-primary-600: 2 132 199;
+  --color-primary-700: 3 105 161;
+  --color-primary-800: 7 89 133;
+  --color-primary-900: 12 74 110;
+
+  --background: #fdfdfd;
+  --foreground: #0f172a;
+}
+
+.dark {
+  --background: #020617;
+  /* Slate 950 */
+  --foreground: #f8fafc;
+}
+
+@layer base {
+  body {
+    @apply transition-colors duration-300;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-family);
+  --color-primary-50: rgb(var(--color-primary-50));
+  --color-primary-100: rgb(var(--color-primary-100));
+  --color-primary-200: rgb(var(--color-primary-200));
+  --color-primary-300: rgb(var(--color-primary-300));
+  --color-primary-400: rgb(var(--color-primary-400));
+  --color-primary-500: rgb(var(--color-primary-500));
+  --color-primary-600: rgb(var(--color-primary-600));
+  --color-primary-700: rgb(var(--color-primary-700));
+  --color-primary-800: rgb(var(--color-primary-800));
+  --color-primary-900: rgb(var(--color-primary-900));
+
+  --color-dark-bg: #020617;
+  --color-dark-surface: #0f172a;
+  --color-dark-border: #1e293b;
+  --color-dark-text: #f8fafc;
+  --color-dark-text-muted: #94a3b8;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-family);
+}
+
+/* Accessibility: Font Size */
+html.font-size-medium {
+  font-size: 112.5%;
+}
+
+html.font-size-large {
+  font-size: 125%;
+}
+
+/* Accessibility: Reduce Motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Accessibility: High Contrast (Light) */
+.high-contrast {
+  --background: #ffffff;
+  --foreground: #000000;
+
+  /* Force Primary to Black/Yellow for high contrast */
+  --color-primary-50: 255 255 0;
+  /* Yellow */
+  --color-primary-100: 255 255 0;
+  --color-primary-500: 0 0 0;
+  /* Black */
+  --color-primary-600: 0 0 0;
+  --color-dark-surface: #ffffff;
+  --color-dark-border: #000000;
+}
+
+/* Accessibility: High Contrast (Dark) */
+.high-contrast.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+
+  /* Force Primary to White/Cyan for high contrast */
+  --color-primary-50: 0 0 0;
+  --color-primary-100: 0 0 0;
+  --color-primary-500: 0 255 255;
+  /* Cyan */
+  --color-primary-600: 0 255 255;
+  --color-dark-surface: #000000;
+  --color-dark-border: #ffffff;
+}
