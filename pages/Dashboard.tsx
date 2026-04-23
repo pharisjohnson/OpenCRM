@@ -23,7 +23,6 @@ import {
   FileJson,
   ChevronDown
 } from 'lucide-react';
-import { MOCK_DEALS } from '../constants';
 import { useData } from '../contexts/DataContext';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -53,7 +52,7 @@ const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
 );
 
 export const Dashboard: React.FC = () => {
-  const { deals, loadMockData } = useData();
+  const { deals } = useData();
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const searchParams = useSearchParams();
   const totalPipeline = deals.reduce((acc, deal) => acc + deal.value, 0);
@@ -80,16 +79,13 @@ export const Dashboard: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Your Dashboard is Empty</h2>
           <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mt-2">
-            Start by adding your first deal or importing demo data to see how the dashboard looks.
+            Add your first deal to start tracking your pipeline and revenue.
           </p>
         </div>
         <div className="flex gap-4">
-          <button
-            onClick={loadMockData}
-            className="px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition-colors font-medium text-sm"
-          >
-            Load Demo Data
-          </button>
+          <Link href="/contacts" className="px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-border transition-colors font-medium text-sm">
+            Add Contacts
+          </Link>
           <Link href="/deals" className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center gap-2">
             <Plus size={16} /> Create First Deal
           </Link>

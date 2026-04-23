@@ -7,18 +7,26 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated } = useUser();
+    const { isAuthenticated, isLoaded } = useUser();
     const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
-        if (!isAuthenticated && pathname !== '/accept-invite') {
+        if (isLoaded && !isAuthenticated && pathname !== '/accept-invite') {
             router.push('/login');
         }
-    }, [isAuthenticated, router, pathname]);
+    }, [isLoaded, isAuthenticated, router, pathname]);
+
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     if (!isAuthenticated && pathname !== '/accept-invite') {
-        return null; // Or a loading spinner
+        return null;
     }
 
     return (
