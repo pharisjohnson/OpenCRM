@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '../contexts/UserContext';
-import { Mail, Lock, LogIn, ArrowRight, UserPlus, Shield, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabaseClient';
 
@@ -98,7 +98,7 @@ export const Login: React.FC = () => {
                         <div className="space-y-1">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Password</label>
-                                <a href="#" className="text-xs text-primary-600 hover:text-primary-700 font-medium">Forgot?</a>
+                                <Link href="/forgot-password" className="text-xs text-primary-600 hover:text-primary-700 font-medium">Forgot?</Link>
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -127,31 +127,6 @@ export const Login: React.FC = () => {
                             )}
                         </button>
 
-                        <div className="relative my-8">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100 dark:border-dark-border"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs">
-                                <span className="px-2 bg-white dark:bg-dark-surface text-gray-400 uppercase tracking-widest font-medium">Demo Access</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <button
-                                type="button"
-                                onClick={() => { setEmail('admin@opencrm.com'); setPassword('password'); }}
-                                className="flex items-center justify-center gap-2 p-2.5 border border-gray-200 dark:border-dark-border rounded-xl hover:bg-gray-50 dark:hover:bg-dark-bg text-xs font-semibold text-gray-600 dark:text-gray-300 transition-all"
-                            >
-                                <Shield size={14} className="text-primary-500" /> Admin
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { setEmail('user@opencrm.com'); setPassword('password'); }}
-                                className="flex items-center justify-center gap-2 p-2.5 border border-gray-200 dark:border-dark-border rounded-xl hover:bg-gray-50 dark:hover:bg-dark-bg text-xs font-semibold text-gray-600 dark:text-gray-300 transition-all"
-                            >
-                                <ArrowRight size={14} className="text-gray-400" /> Standard
-                            </button>
-                        </div>
                     </form>
                 </div>
                 <div className="bg-gray-50 dark:bg-dark-bg/50 p-6 text-center border-t border-gray-100 dark:border-dark-border">

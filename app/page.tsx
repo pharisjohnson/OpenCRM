@@ -13,31 +13,13 @@ import {
     Globe,
     BarChart3,
     Menu,
-    X,
-    Play,
-    Mail,
-    Sparkles
+    X
 } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 
 export default function LandingPage() {
     const { currentUser } = useUser();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [showDemoModal, setShowDemoModal] = useState(false);
-    const [demoEmail, setDemoEmail] = useState('');
-    const [demoSubmitted, setDemoSubmitted] = useState(false);
-
-    const handleDemoSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        // Store demo request in localStorage for now
-        localStorage.setItem('demoRequested', 'true');
-        localStorage.setItem('demoEmail', demoEmail);
-        localStorage.setItem('demoMode', 'true');
-        setDemoSubmitted(true);
-        setTimeout(() => {
-            window.location.href = '/dashboard?demo=true';
-        }, 1500);
-    };
 
     return (
         <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100">
@@ -128,13 +110,12 @@ export default function LandingPage() {
                     >
                         Start 7-Day Free Trial <ArrowRight size={20} />
                     </Link>
-                    <button
-                        onClick={() => setShowDemoModal(true)}
+                    <Link
+                        href="/login"
                         className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-bold text-lg shadow-sm transition-all flex items-center justify-center gap-2"
                     >
-                        <Play size={20} />
-                        See a Demo
-                    </button>
+                        Sign In
+                    </Link>
                 </div>
 
                 {/* Dashboard Preview */}
@@ -396,77 +377,6 @@ export default function LandingPage() {
             </footer>
 
             {/* Demo Modal */}
-            {showDemoModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl relative animate-fade-in">
-                        <button
-                            onClick={() => setShowDemoModal(false)}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-
-                        {!demoSubmitted ? (
-                            <>
-                                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6">
-                                    <Play size={32} className="text-white" />
-                                </div>
-                                
-                                <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                                    Try the Interactive Demo
-                                </h3>
-                                <p className="text-slate-600 mb-6">
-                                    Enter your email to access a full demo with guided tooltips showing you how each feature works.
-                                </p>
-
-                                <form onSubmit={handleDemoSubmit} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Your Email
-                                        </label>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                            <input
-                                                type="email"
-                                                required
-                                                value={demoEmail}
-                                                onChange={(e) => setDemoEmail(e.target.value)}
-                                                placeholder="you@company.com"
-                                                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <Sparkles size={18} />
-                                        Start Interactive Demo
-                                    </button>
-
-                                    <p className="text-xs text-slate-500 text-center">
-                                        No credit card required. Demo includes full feature walkthrough.
-                                    </p>
-                                </form>
-                            </>
-                        ) : (
-                            <div className="text-center py-8">
-                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <CheckCircle className="text-green-600" size={32} />
-                                </div>
-                                <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                                    Demo Ready!
-                                </h3>
-                                <p className="text-slate-600 mb-4">
-                                    Redirecting you to the interactive demo...
-                                </p>
-                                <div className="animate-spin w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto"></div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
