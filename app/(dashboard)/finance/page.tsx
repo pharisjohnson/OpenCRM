@@ -1,6 +1,6 @@
 "use client";
 
-import { Finance } from '@/pages/Finance';
+import { Finance } from '@/views/Finance';
 
 export default function Page() {
     return <Finance />;

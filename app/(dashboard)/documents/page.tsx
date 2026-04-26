@@ -1,6 +1,6 @@
 "use client";
 
-import { Documents } from '@/pages/Documents';
+import { Documents } from '@/views/Documents';
 
 export default function Page() {
     return <Documents />;

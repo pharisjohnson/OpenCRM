@@ -46,24 +46,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         `)
         .eq('user_id', userId);
 
-      if (membershipsData && membershipsData.length > 0) {
-        const orgs = membershipsData.map(m => m.organizations as unknown as Organization);
+      const orgs = (membershipsData || []).map(m => m.organizations as unknown as Organization);
+      if (orgs.length > 0) {
         setOrganizations(orgs);
-
-        // Use last selected or first organization
         const savedOrgId = localStorage.getItem('opencrm_selected_org');
         const activeOrg = orgs.find(o => o.id === savedOrgId) || orgs[0];
         setCurrentOrganization(activeOrg);
-
         setCurrentUser({
           id: userId,
           name: profile?.full_name || 'User',
-          email: '', // Get from session
+          email: '',
           role: profile?.role || 'user',
           avatarUrl: profile?.avatar_url,
           coverImageUrl: profile?.cover_url,
           currentOrganizationId: activeOrg.id
         });
+      } else {
+        // No org yet (e.g. right after signup before org is created)
+        setCurrentUser(prev => ({
+          ...prev,
+          id: userId,
+          name: profile?.full_name || prev.name,
+          role: profile?.role || prev.role,
+        }));
       }
     } catch (err) {
       console.error('Error fetching user data:', err);

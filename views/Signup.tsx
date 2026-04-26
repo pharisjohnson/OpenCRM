@@ -63,7 +63,7 @@ export const Signup: React.FC = () => {
                 if (data.session) {
                     // Mark that user needs onboarding
                     localStorage.setItem('needsOnboarding', 'true');
-                    router.push('/dashboard');
+                    router.push('/onboarding');
                 } else {
                     setError('Signup successful! Please check your email for a confirmation link.');
                 }

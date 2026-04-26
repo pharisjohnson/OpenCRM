@@ -1,6 +1,6 @@
 "use client";
 
-import { Chat } from '@/pages/Chat';
+import { Chat } from '@/views/Chat';
 
 export default function Page() {
     return <Chat />;

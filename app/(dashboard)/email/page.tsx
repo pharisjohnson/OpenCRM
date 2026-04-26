@@ -1,6 +1,6 @@
 "use client";
 
-import { Email } from '@/pages/Email';
+import { Email } from '@/views/Email';
 
 export default function Page() {
     return <Email />;

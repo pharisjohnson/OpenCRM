@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPage } from '@/pages/Calendar';
+import { CalendarPage } from '@/views/Calendar';
 
 export default function Page() {
     return <CalendarPage />;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Companies } from '@/pages/Companies';
+import { Companies } from '@/views/Companies';
 
 export default function Page() {
     return <Companies />;

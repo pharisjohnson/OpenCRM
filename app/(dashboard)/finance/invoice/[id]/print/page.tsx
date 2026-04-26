@@ -1,6 +1,6 @@
 "use client";
 
-import { InvoicePrint } from '@/pages/InvoicePrint';
+import { InvoicePrint } from '@/views/InvoicePrint';
 
 export default function Page() {
     return <InvoicePrint />;

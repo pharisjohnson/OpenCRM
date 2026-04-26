@@ -1,6 +1,6 @@
 "use client";
 
-import { Contacts } from '@/pages/Contacts';
+import { Contacts } from '@/views/Contacts';
 
 export default function Page() {
     return <Contacts />;

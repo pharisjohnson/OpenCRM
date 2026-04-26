@@ -1,12 +1,14 @@
 "use server";
 
 import { createClient } from '@supabase/supabase-js';
+import { sendInviteEmail } from '@/services/emailService';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-// Server-side Supabase client with service role for admin operations
-const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+const getSupabaseAdmin = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Missing Supabase server credentials');
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+};
 
 interface InviteUserParams {
   organizationId: string;
@@ -19,6 +21,8 @@ export async function inviteUserToOrganization(params: InviteUserParams) {
   const { organizationId, email, role, invitedBy } = params;
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     // 1. Verify inviter is an admin
     const { data: membership, error: memberError } = await supabaseAdmin
       .from('memberships')
@@ -38,7 +42,7 @@ export async function inviteUserToOrganization(params: InviteUserParams) {
     // 2. Check if organization can add more members
     const { data: org, error: orgError } = await supabaseAdmin
       .from('organizations')
-      .select('max_team_members, subscription_plan')
+      .select('max_team_members, subscription_plan, name')
       .eq('id', organizationId)
       .single();
 
@@ -46,7 +50,6 @@ export async function inviteUserToOrganization(params: InviteUserParams) {
       return { success: false, error: 'Organization not found' };
     }
 
-    // Count current members
     const { count, error: countError } = await supabaseAdmin
       .from('memberships')
       .select('id', { count: 'exact', head: true })
@@ -57,55 +60,54 @@ export async function inviteUserToOrganization(params: InviteUserParams) {
     }
 
     if (org.subscription_plan !== 'enterprise' && count && count >= (org.max_team_members || 5)) {
-      return { 
-        success: false, 
-        error: `Team limit reached. Upgrade your plan to add more members.` 
-      };
+      return { success: false, error: 'Team limit reached. Upgrade your plan to add more members.' };
     }
 
-    // 3. Check if user already exists
-    const { data: existingUser } = await supabaseAdmin
-      .from('memberships')
+    // 3. Check if a pending invitation for this email already exists
+    const { data: existingInvite } = await supabaseAdmin
+      .from('invitations')
       .select('id')
       .eq('organization_id', organizationId)
-      .eq('user_id', email); // This would need to lookup by email
+      .eq('email', email)
+      .eq('status', 'pending')
+      .single();
 
-    if (existingUser && existingUser.length > 0) {
-      return { success: false, error: 'User is already a member of this organization' };
+    if (existingInvite) {
+      return { success: false, error: 'A pending invitation for this email already exists' };
     }
 
     // 4. Create invitation token
-    const token = `inv_${Math.random().toString(36).substring(2, 15)}${Date.now()}`;
-    
-    const { data: invitation, error: inviteError } = await supabaseAdmin
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const { error: inviteError } = await supabaseAdmin
       .from('invitations')
       .insert({
         organization_id: organizationId,
         invited_by: invitedBy,
-        email: email,
-        role: role,
-        token: token,
-        status: 'pending'
-      })
-      .select()
-      .single();
+        email,
+        role,
+        token,
+        status: 'pending',
+        expires_at: expiresAt,
+      });
 
     if (inviteError) {
-      if (inviteError.code === '23505') { // Unique constraint violation
-        return { success: false, error: 'An invitation for this email already exists' };
-      }
       return { success: false, error: inviteError.message };
     }
 
-    // 5. TODO: Send email with invitation link
-    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/accept-invite?token=${token}`;
-    
-    // For now, return the URL (in production, send via email)
-    return { 
-      success: true, 
-      inviteUrl,
-      message: 'Invitation created successfully'
-    };
+    // 5. Send invitation email
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const inviteUrl = `${appUrl}/accept-invite?token=${token}&email=${encodeURIComponent(email)}`;
+
+    try {
+      await sendInviteEmail(email, org.name || 'your team', inviteUrl);
+    } catch (emailErr) {
+      console.error('Failed to send invite email:', emailErr);
+      // Invitation is still created — don't fail the whole operation
+    }
+
+    return { success: true, inviteUrl, message: 'Invitation sent successfully' };
 
   } catch (error: any) {
     console.error('Invite error:', error);
@@ -115,6 +117,8 @@ export async function inviteUserToOrganization(params: InviteUserParams) {
 
 export async function acceptInvitation(token: string, userId: string) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     // 1. Get invitation
     const { data: invitation, error: inviteError } = await supabaseAdmin
       .from('invitations')
@@ -183,6 +187,8 @@ export async function acceptInvitation(token: string, userId: string) {
 
 export async function getOrganizationInvitations(organizationId: string, userId: string) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Verify user is admin
     const { data: membership } = await supabaseAdmin
       .from('memberships')

@@ -12,8 +12,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const pathname = usePathname();
 
     useEffect(() => {
-        if (isLoaded && !isAuthenticated && pathname !== '/accept-invite') {
+        const publicPaths = ['/login', '/signup', '/accept-invite', '/onboarding', '/test-trial'];
+        const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
+
+        if (isLoaded && !isAuthenticated && !isPublicPath) {
             router.push('/login');
+        }
+
+        // Check for onboarding
+        if (isLoaded && isAuthenticated && localStorage.getItem('needsOnboarding') === 'true' && pathname !== '/onboarding') {
+            router.push('/onboarding');
         }
     }, [isLoaded, isAuthenticated, router, pathname]);
 
@@ -25,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
 
-    if (!isAuthenticated && pathname !== '/accept-invite') {
+    if (!isAuthenticated && !['/accept-invite', '/onboarding', '/test-trial'].some(path => pathname.startsWith(path))) {
         return null;
     }
 

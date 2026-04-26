@@ -1,6 +1,6 @@
 "use client";
 
-import { Helpdesk } from '@/pages/Helpdesk';
+import { Helpdesk } from '@/views/Helpdesk';
 
 export default function Page() {
     return <Helpdesk />;

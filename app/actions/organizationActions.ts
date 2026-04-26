@@ -2,18 +2,17 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
-
 export async function createOrganizationForUser(userId: string, companyName: string, userName: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    return { success: false, error: 'Server configuration error: missing Supabase credentials' };
+  }
+
+  const supabaseAdmin = createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
   try {
     // Create organization with trial status
     const { data: org, error: orgError } = await supabaseAdmin

@@ -1,6 +1,6 @@
 "use client";
 
-import { Deals } from '@/pages/Deals';
+import { Deals } from '@/views/Deals';
 
 export default function Page() {
     return <Deals />;

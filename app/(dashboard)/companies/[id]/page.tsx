@@ -1,6 +1,6 @@
 "use client";
 
-import { CompanyDetail } from '@/pages/CompanyDetail';
+import { CompanyDetail } from '@/views/CompanyDetail';
 
 export default function Page() {
     return <CompanyDetail />;
